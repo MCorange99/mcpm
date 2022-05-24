@@ -1,5 +1,5 @@
 .PHONY=all clean
-objects=obj/mcpm.o
+objects=obj/mcpm.o obj/config.o obj/cmdOptions.o
 
 cc=g++
 ccoptions= -Iconfig++

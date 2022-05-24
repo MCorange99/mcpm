@@ -8,6 +8,10 @@
 #include <sstream>
 #include <cstring>
 
+
+#include "config.h"
+#include "cmdOptions.h"
+
 using namespace std;
 
 char version[] = "0.0.0.3";
@@ -19,66 +23,40 @@ bool query = false;
 bool fupdate = false;
 bool refresh = false;
 
-
-// class InputParser{
-//     public:
-//         InputParser (int &argc, char **argv){
-//             for (int i=1; i < argc; ++i)
-//                 this->tokens.push_back(std::string(argv[i]));
-//         }
-//         /// @author iain
-//         const std::string& getCmdOption(const std::string &option) const{
-//             std::vector<std::string>::const_iterator itr;
-//             itr =  std::find(this->tokens.begin(), this->tokens.end(), option);
-//             if (itr != this->tokens.end() && ++itr != this->tokens.end()){
-//                 return *itr;
-//             }
-//             static const std::string empty_string("");
-//             return empty_string;
-//         }
-//         /// @author iain
-//         bool cmdOptionExists(const std::string &option) const{
-//             return std::find(this->tokens.begin(), this->tokens.end(), option)
-//                    != this->tokens.end();
-//         }
-//     private:
-//         std::vector <std::string> tokens;
+// struct Config {
+//     int       version;
+//     string    mirror;
+//     bool      color;
 // };
 
-struct Config {
-    int       version;
-    string    mirror;
-    bool      color;
-};
+// void loadConfig(Config& config) {
+//     ifstream fin("config.conf");
+//     string line;
+//     while (getline(fin, line)) {
+//         istringstream sin(line.substr(line.find("=") + 1));
+//         if (line.find("version") != -1)
+//             sin >> config.version;
+//         else if (line.find("mirror") != -1)
+//             sin >> config.mirror;
+//         else if (line.find("color") != -1)
+//             sin >> config.color;
+//     }
+// }
 
-void loadConfig(Config& config) {
-    ifstream fin("config.conf");
-    string line;
-    while (getline(fin, line)) {
-        istringstream sin(line.substr(line.find("=") + 1));
-        if (line.find("version") != -1)
-            sin >> config.version;
-        else if (line.find("mirror") != -1)
-            sin >> config.mirror;
-        else if (line.find("color") != -1)
-            sin >> config.color;
-    }
-}
+// char* getCmdOption(char ** begin, char ** end, const string & option)
+// {
+//     char ** itr = find(begin, end, option);
+//     if (itr != end && ++itr != end)
+//     {
+//         return *itr;
+//     }
+//     return 0;
+// }
 
-char* getCmdOption(char ** begin, char ** end, const string & option)
-{
-    char ** itr = find(begin, end, option);
-    if (itr != end && ++itr != end)
-    {
-        return *itr;
-    }
-    return 0;
-}
-
-bool cmdOptionExists(char** begin, char** end, const string& option)
-{
-    return find(begin, end, option) != end;
-}
+// bool cmdOptionExists(char** begin, char** end, const string& option)
+// {
+//     return find(begin, end, option) != end;
+// }
 
 ////////////////////////////////////////////////////////
 
@@ -88,6 +66,12 @@ bool cmdOptionExists(char** begin, char** end, const string& option)
 //     return str*;
 // }
 
+class Config {
+    public:
+        int       version;
+        string    mirror;
+        bool      color;
+    };
 int credits(){
     printf("==================\n");
     printf("MCPM Version %s\n", version);
@@ -95,7 +79,7 @@ int credits(){
     return 0;
 }
 
-char suggestHelp(char* option[]){
+char suggestHelp(char option[]){
     printf("Unknown options '%s'", option);
     return 0;
 }
@@ -152,61 +136,63 @@ int fn_query(int argc, char* argv[], string query_str){
 }
 
 int main(int argc, char* argv[]){
+
+    cfg::Config config;
+
     credits();
-    Config config;
-    loadConfig(config);
+    cfg::loadConfig();
     if (argc < 1){
         printf("For help use -h or --help options.");
     }
 
     //InputParser input(argc, argv);
 
-    if(cmdOptionExists(argv, argv+argc, "-h")){
+    if(cmdOpt::cmdOptionExists(argv, argv+argc, "-h")){
         help = true;
     }
-    if(cmdOptionExists(argv, argv+argc, "--help")){
+    if(cmdOpt::cmdOptionExists(argv, argv+argc, "--help")){
         help = true;
     }
 
     if(help) return 0;
 
-    char * install_str = getCmdOption(argv, argv + argc, "--install");
+    char * install_str = cmdOpt::getCmdOption(argv, argv + argc, "--install");
     if (install_str){
         install = true;
     }
-    install_str = getCmdOption(argv, argv + argc, "-S");
+    install_str = cmdOpt::getCmdOption(argv, argv + argc, "-S");
     if (install_str){
         install = true;
     }
-    char * uninst_str = getCmdOption(argv, argv + argc, "--remove");
+    char * uninst_str = cmdOpt::getCmdOption(argv, argv + argc, "--remove");
     if (uninst_str){
         uninst = true;
     }
-    uninst_str = getCmdOption(argv, argv + argc, "-R");
+    uninst_str = cmdOpt::getCmdOption(argv, argv + argc, "-R");
     if (uninst_str){
         uninst = true;
     }
-    char * query_str = getCmdOption(argv, argv + argc, "--query");
+    char * query_str = cmdOpt::getCmdOption(argv, argv + argc, "--query");
     if (query_str){
         query = true;
     }
-    query_str = getCmdOption(argv, argv + argc, "-Q"); 
+    query_str = cmdOpt::getCmdOption(argv, argv + argc, "-Q"); 
     if (query_str){
         query = true;
     }    
-    if(cmdOptionExists(argv, argv+argc, "-u")){
+    if(cmdOpt::cmdOptionExists(argv, argv+argc, "-u")){
         fupdate = true;
     }
-    if(cmdOptionExists(argv, argv+argc, "--update")){
+    if(cmdOpt::cmdOptionExists(argv, argv+argc, "--update")){
         fupdate = true;
     }
-    if(cmdOptionExists(argv, argv+argc, "-y")){
+    if(cmdOpt::cmdOptionExists(argv, argv+argc, "-y")){
         refresh = true;
     }
-    if(cmdOptionExists(argv, argv+argc, "--refresh")){
+    if(cmdOpt::cmdOptionExists(argv, argv+argc, "--refresh")){
         refresh = true;
     }
-    if(cmdOptionExists(argv, argv+argc, "--ls_opt")){
+    if(cmdOpt::cmdOptionExists(argv, argv+argc, "--ls_opt")){
         ls_opt = true;
     }
     if(ls_opt){
